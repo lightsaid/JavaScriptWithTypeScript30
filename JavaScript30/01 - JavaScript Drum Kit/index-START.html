@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>JS Drum Kit</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 
@@ -57,10 +59,85 @@
   <audio data-key="75" src="sounds/tom.wav"></audio>
   <audio data-key="76" src="sounds/tink.wav"></audio>
 
-<script>
+  <script>
+    // NOTE: 观察finished版本效果
+    // 按下对应键盘键，播放对应的 Audio, 同时CSS闪烁
 
-</script>
+    // 1. a方案，直观思路， 监听按下事件
+    // NOTE: 弊端，频繁添加事件，同一个dom添加多一个事件
+    // 准确来说是添加多个 transitionend， 通过 f12 Elements 右侧 Event Listeners 
+    function aPlan() {
+      document.onkeydown = function (event) {
+        let el = document.querySelector(`div[data-key="${event.keyCode}"]`)
+        if (el) {
+          // 添加事件, 每按一次都会添加一个transitionend事件
+          // 监听CSS动画是否加载完毕 transitionend （transition事件监听）
+          el.addEventListener("transitionend", (event) => {
+            if (event.propertyName !== 'transform') return;
+            event.target.classList.remove('playing');
+          })
+          let audio = document.querySelector(`audio[data-key="${event.keyCode}"]`)
+          audio.currentTime = 0;
+          audio.play()
+          el.classList.add("playing")
+        }
+      }
+    }
+
+    aPlan()
+    // NOTE: a方案总结，不要再循环里执行addEventListener添加事件
+
+    // 2. b方案
+    // 思路就是将transitionend事件抽取出来，获取所有class="key"元素逐一添加transitionend事件
+    function bPlan() {
+      document.querySelectorAll(".key")?.forEach(key => {
+        key.addEventListener("transitionend", (event) => {
+          if (event.propertyName !== 'transform') return;
+          event.target.classList.remove('playing');
+        })
+      })
+
+      // 监听按下键盘事件
+      document.onkeydown = function (event) {
+        let el = document.querySelector(`div[data-key="${event.keyCode}"]`)
+        if (el) {
+          let audio = document.querySelector(`audio[data-key="${event.keyCode}"]`)
+          el.classList.add("playing")
+          audio.currentTime = 0;
+          audio.play()
+        }
+      }
+    }
+    // bPlan()
+    // NOTE: b方案总结，没按一次不会重复添加transitionend事件，方案和finished相似
+
+    // 3. c方案 通过事件代理方式实现
+    function cPlan() {
+      document.querySelector(".keys")?.addEventListener("transitionend", (event) => {
+        if (event.propertyName !== 'transform') return;
+        event.target.classList.remove('playing');
+      }, false)
+
+      function playSound(event) {
+        let audio = document.querySelector(`audio[data-key="${event.keyCode}"]`)
+        let key = document.querySelector(`div[data-key="${event.keyCode}"]`)
+        if (!audio) return
+
+        key.classList.add("playing")
+        audio.currentTime = 0;
+        audio.play()
+      }
+
+      document.addEventListener("keydown", playSound)
+    }
+
+    // cPlan()
+    // NOTE: 总结 c 方案无疑是上面3个方案性能最好的，事件绑定是最少的。
+
+
+  </script>
 
 
 </body>
+
 </html>
