@@ -1,0 +1,1 @@
+{"version":3,"file":"hello.js","mappings":"yBACAA,QAAQC,IAAI,c","sources":["webpack://webpack-ts/./src/challenge/hello-world/index.ts"],"sourcesContent":["\"use strict\";\nconsole.log(\"Hello World\");\n"],"names":["console","log"],"sourceRoot":""}
